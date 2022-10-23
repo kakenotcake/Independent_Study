@@ -1,0 +1,141 @@
+/* node.jj */
+
+options {
+	STATIC = false;
+}
+PARSER_BEGIN(Node)
+	import java.io.PrintStream ;
+
+	class Node {
+		static void main( String[] args ) 
+		throws ParseException, TokenMgrError, NumberFormatException {
+			Node parser = new Node( System.in ) ;
+			parser.Start( System.out ) ;
+		}
+		//double previousValue = 0.0 ;
+	}
+PARSER_END(Node)
+
+SKIP : { " " }
+TOKEN : { < EOL : "\n" | "\r" | "\r\n" > }
+TOKEN : { < PLUS : "+" > }
+TOKEN : { < MINUS : "-" > }
+TOKEN : { < TIMES : "*" > }
+TOKEN : { < DIVIDE : "/" > }
+TOKEN : { < OPEN_PAR : "(" > }
+TOKEN : { < CLOSE_PAR : ")" > }
+//TOKEN : { PREV : "$" > }
+TOKEN : { < NUMBER : (["0"-"9"])+ | (["0"-"9"])+ "." {["0"-"9"])+ | (["0"-"9"])+ "." | "." (["0"-"9"])+ > }
+TOKEN : { #DIGITS : (["0"-"9"])+ > }
+TOKEN : { < EQUALS : "=" > }
+TOKEN : { < TILDE : "~" > }
+TOKEN : { < VAR : ["a"-"z","A"-"Z","_"] (["a"-"z","A"-"Z","_","0"-"9"])* > }
+
+//ASK ABOUT THE START
+/* void Start(PrintStram printStream) throws NumberFormatException :
+{}
+{
+	(
+		previousValue = Expression() 
+		<EOL>
+		{ printStream.println( previousValue ) ; }
+	)*
+	<EOF>
+} */
+
+Node Expression() throws NumberFormatException :
+{
+	double i ;
+	double value ;
+}
+{
+	value = Term() 
+	(
+		<PLUS>
+		i = Term()
+		{ value += i ; }
+	|
+		<MINUS>
+		i = Term()
+		{ value -= i ; }
+	)*
+	{return value ; }
+}
+double term() throws NumberFormatException :
+{
+	double i ;
+	double value ;
+}
+{
+	value = Primary()
+	(
+		<TIMES>
+		i = Primary()
+		{ value *= i ; }
+	|
+		<DIVIDE>
+		i = Primary()
+		{ value /= i ; }
+	)*
+	{return value ; }
+}
+double Primary() throws NumberFormatException :
+{
+	Token t;
+	double d;
+}
+	t = <NUMBER>
+	{return Double.parseDouble( t.image ) ; }
+
+	<PREVIOUS> 
+	{ return previousValue ; }
+
+	<OPEN_PAR> d=Expression() <CLOSE_PAR>
+	{return d ; }
+
+	<MINUS> d=Primary()
+	{return -d ; }
+}
+Node Stmt() :
+{
+	Node a;
+	Node w;
+	Node i;
+}
+{
+	a = Assign()
+	{ return a ; }
+|
+	w = While()
+	{ return w ; }
+|
+	i = If()
+	{ return i ; }
+}
+Node Assign() :
+{
+	Token v;
+	Node e;
+}
+	v = <VAR> <EQUALS>
+	e = Expression() <TILDE>
+	(
+		Node a = new Node(NodeType.ASSIGN);
+		Node var = new Node(NodeType.VAR);
+		var.setString(v.image);
+		a.addChild(var);
+		a.addChild(e);
+	) 
+	{ return a ; }
+}
+Node While() :
+{
+	
+	{ return w ; }
+
+}
+Node If() :
+{
+
+	{return i ; }
+}
